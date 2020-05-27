@@ -309,13 +309,13 @@ $80/8313 64 98       STZ $98                 ; $98 = 0x00
 $80/8315 60          RTS                     ;
 ++:
 $80/8316 20 AD 84    JSR $84AD               ; oam_dma()
-$80/8319 A5 43       LDA $43                 ; OAMADD = oamadd
+$80/8319 A5 43       LDA $43                 ; OAMADD = oamadd // configure priority rotation
 $80/831B 8D 02 21    STA $2102               ;
 $80/831E A5 44       LDA $44                 ;
 $80/8320 8D 03 21    STA $2103               ;
 $80/8323 20 D8 84    JSR $84D8               ; cgram_dma()
 $80/8326 20 08 85    JSR $8508               ; $8508()
-$80/8329 20 46 85    JSR $8546               ; $8546()
+$80/8329 20 46 85    JSR $8546               ; vram_dma()
 $80/832C A5 17       LDA $17                 ; MOSAIC = mosaic
 $80/832E 8D 06 21    STA $2106               ;
 $80/8331 A5 34       LDA $34                 ; W12SEL = w12sel
@@ -527,451 +527,501 @@ $80/8504 8D 0B 42    STA $420B               ; update_cgram_flag = 0x00
 $80/8507 60          RTS                     ;
 
 
-$80/8508 A5 A9       LDA $A9                 
-$80/850A F0 39       BEQ $39    [$8545]      
-$80/850C 64 A9       STZ $A9                 
-$80/850E C9 04       CMP #$04                
-$80/8510 C2 20       REP #$20                
-$80/8512 F0 05       BEQ $05    [$8519]      
-$80/8514 A9 80 00    LDA #$0080              
-$80/8517 80 03       BRA $03    [$851C]      
-$80/851C 8D 05 43    STA $4305               
-$80/851F A9 40 05    LDA #$0540              
-$80/8522 8D 02 43    STA $4302               
-$80/8525 A5 A7       LDA $A7                 
-$80/8527 8D 16 21    STA $2116               
-$80/852A E2 20       SEP #$20                
-$80/852C A9 80       LDA #$80                
-$80/852E 8D 15 21    STA $2115               
-$80/8531 A9 00       LDA #$00                
-$80/8533 8D 04 43    STA $4304               
-$80/8536 A9 01       LDA #$01                
-$80/8538 8D 00 43    STA $4300               
-$80/853B A9 18       LDA #$18                
-$80/853D 8D 01 43    STA $4301               
-$80/8540 A9 01       LDA #$01                
-$80/8542 8D 0B 42    STA $420B               
-$80/8545 60          RTS                     
+$80/8508 A5 A9       LDA $A9                 ; if(A = $A9) {
+$80/850A F0 39       BEQ +                   ;
+$80/850C 64 A9       STZ $A9                 ;     $A9 = 0x00
+$80/850E C9 04       CMP #$04                ;     DMAN0 = (A != 0x04) ? 0x0080 : 0x0040
+$80/8510 C2 20       REP #$20                ;
+$80/8512 F0 05       BEQ +else               ;
+$80/8514 A9 80 00    LDA #$0080              ;
+$80/8517 80 03       BRA +if                 ;
++else:
+$80/8519 A9 40 00    LDA #$0040              ;
++if:
+$80/851C 8D 05 43    STA $4305               ;
+$80/851F A9 40 05    LDA #$0540              ;     DMAA0 = 0x000540
+$80/8522 8D 02 43    STA $4302               ;
+$80/8525 A5 A7       LDA $A7                 ;     VMADD = $A7
+$80/8527 8D 16 21    STA $2116               ;
+$80/852A E2 20       SEP #$20                ;     VMAINC = 0x80 // increment by 1 after writing word
+$80/852C A9 80       LDA #$80                ;
+$80/852E 8D 15 21    STA $2115               ;
+$80/8531 A9 00       LDA #$00                ;
+$80/8533 8D 04 43    STA $4304               ;
+$80/8536 A9 01       LDA #$01                ;     DMAP0 = 0x01 // 2 address, increment, a to b bus
+$80/8538 8D 00 43    STA $4300               ;
+$80/853B A9 18       LDA #$18                ;     DMAB0 = 0x18 // VMDATA
+$80/853D 8D 01 43    STA $4301               ;
+$80/8540 A9 01       LDA #$01                ;     MDMAEN = 0x01
+$80/8542 8D 0B 42    STA $420B               ;
++:
+$80/8545 60          RTS                     ; }
 
-$80/8546 E2 30       SEP #$30                
-$80/8548 A9 01       LDA #$01                
-$80/854A 04 9C       TSB $9C                 
-$80/854C F0 01       BEQ $01    [$854F]      
-$80/854E 60          RTS                     
-$80/854F A2 00       LDX #$00                
-$80/8551 E4 9B       CPX $9B                 
-$80/8553 D0 05       BNE $05    [$855A]      
-$80/8555 64 9B       STZ $9B                 
-$80/8557 64 9C       STZ $9C                 
-$80/8559 60          RTS                     
-$80/855A C2 20       REP #$20                
-$80/855C BD C2 05    LDA $05C2,x             
-$80/855F 8D 02 43    STA $4302               
-$80/8562 BD C4 05    LDA $05C4,x             
-$80/8565 8D 16 21    STA $2116               
-$80/8568 BD C6 05    LDA $05C6,x             
-$80/856B 8D 05 43    STA $4305               
-$80/856E E2 20       SEP #$20                
-$80/8570 A9 18       LDA #$18                
-$80/8572 8D 01 43    STA $4301               
-$80/8575 BD C0 05    LDA $05C0,x             
-$80/8578 8D 15 21    STA $2115               
-$80/857B BD C1 05    LDA $05C1,x             
-$80/857E 8D 04 43    STA $4304               
-$80/8581 A9 01       LDA #$01                
-$80/8583 8D 00 43    STA $4300               
-$80/8586 A9 01       LDA #$01                
-$80/8588 8D 0B 42    STA $420B               
-$80/858B A9 80       LDA #$80                
-$80/858D 24 4E       BIT $4E                 
-$80/858F D0 0C       BNE $0C    [$859D]      
-$80/8591 2C 12 42    BIT $4212               
-$80/8594 D0 07       BNE $07    [$859D]      
-$80/8596 2C 12 42    BIT $4212               
-$80/8599 F0 FB       BEQ $FB    [$8596]      
-$80/859B 80 BD       BRA $BD    [$855A]      
-$80/859D 8A          TXA                     
-$80/859E 18          CLC                     
-$80/859F 69 08       ADC #$08                
-$80/85A1 AA          TAX                     
-$80/85A2 80 AD       BRA $AD    [$8551]      
+
+vram_dma:
+$80/8546 E2 30       SEP #$30                ; A = $9C
+$80/8548 A9 01       LDA #$01                ; $9C |= 0x01
+$80/854A 04 9C       TSB $9C                 ; if(A & 0x01)
+$80/854C F0 01       BEQ +                   ;
+$80/854E 60          RTS                     ;     return
++:
+$80/854F A2 00       LDX #$00                ; for(X = 0x00; X != $9B; X += 0x08) {
+-:
+$80/8551 E4 9B       CPX $9B                 ;
+$80/8553 D0 05       BNE xfer                ;
+$80/8555 64 9B       STZ $9B                 ;
+$80/8557 64 9C       STZ $9C                 ;
+$80/8559 60          RTS                     ; xfer:
+xfer:
+$80/855A C2 20       REP #$20                ;     DMAA0 = $05C1[X]
+$80/855C BD C2 05    LDA $05C2,x             ;
+$80/855F 8D 02 43    STA $4302               ;
+$80/8562 BD C4 05    LDA $05C4,x             ;     VMADD = $05C4[X]
+$80/8565 8D 16 21    STA $2116               ;
+$80/8568 BD C6 05    LDA $05C6,x             ;     DMAN0 = $05C6[X]
+$80/856B 8D 05 43    STA $4305               ;
+$80/856E E2 20       SEP #$20                ;     DMAB0 = 0x18 // VMDATA
+$80/8570 A9 18       LDA #$18                ;
+$80/8572 8D 01 43    STA $4301               ;
+$80/8575 BD C0 05    LDA $05C0,x             ;     VMAINC = $05C0[X]
+$80/8578 8D 15 21    STA $2115               ;
+$80/857B BD C1 05    LDA $05C1,x             ;
+$80/857E 8D 04 43    STA $4304               ;
+$80/8581 A9 01       LDA #$01                ;     DMAP0 = 0x01 // 2 address, increment, a to b bus
+$80/8583 8D 00 43    STA $4300               ;
+$80/8586 A9 01       LDA #$01                ;     MDMAEN = 0x01
+$80/8588 8D 0B 42    STA $420B               ;
+$80/858B A9 80       LDA #$80                ;     if(!($4E & 0x80) || !(HVBJOY & 0x80)) {
+$80/858D 24 4E       BIT $4E                 ;
+$80/858F D0 0C       BNE +                   ;
+$80/8591 2C 12 42    BIT $4212               ;
+$80/8594 D0 07       BNE +                   ;
+-wait:
+$80/8596 2C 12 42    BIT $4212               ;         while(!(HVBJOY & 0x80)) // wait for vblank
+$80/8599 F0 FB       BEQ -wait               ;
+$80/859B 80 BD       BRA xfer                ;         goto xfer
++:
+$80/859D 8A          TXA                     ;     }
+$80/859E 18          CLC                     ;
+$80/859F 69 08       ADC #$08                ; }
+$80/85A1 AA          TAX                     ; $9B = 0x00
+$80/85A2 80 AD       BRA -                   ; $9C = 0x00
 
 
 read_joy:
-$80/85A4 A9 01       LDA #$01                
-$80/85A6 24 48       BIT $48                 
-$80/85A8 D0 01       BNE $01    [$85AB]      
-$80/85AB AD 12 42    LDA $4212               
-$80/85AE 29 01       AND #$01                
-$80/85B0 D0 F9       BNE $F9    [$85AB]      
-$80/85B2 A2 00       LDX #$00                
-$80/85B4 C2 20       REP #$20                
-$80/85B6 BD 18 42    LDA $4218,x             
-$80/85B9 89 0F 00    BIT #$000F              
-$80/85BC F0 08       BEQ $08    [$85C6]      
-$80/85C6 95 54       STA $54,x               
-$80/85C8 55 50       EOR $50,x               
-$80/85CA 35 54       AND $54,x               
-$80/85CC 95 58       STA $58,x               
-$80/85CE B5 54       LDA $54,x               
-$80/85D0 95 50       STA $50,x               
-$80/85D2 E8          INX                     
-$80/85D3 E8          INX                     
-$80/85D4 E0 04       CPX #$04                
-$80/85D6 D0 DC       BNE $DC    [$85B4]      
-$80/85D8 E2 20       SEP #$20                
-$80/85DA 60          RTS                     
+$80/85A4 A9 01       LDA #$01                ; while($48 & 0x01)
+$80/85A6 24 48       BIT $48                 ;
+-wait:
+$80/85A8 D0 01       BNE -wait               ;
+-wait:
+$80/85AB AD 12 42    LDA $4212               ; while(HVBJOY & 0x01) // wait for auto read to complete
+$80/85AE 29 01       AND #$01                ;
+$80/85B0 D0 F9       BNE -wait               ;
+$80/85B2 A2 00       LDX #$00                ; for(X = 0x00; X != 0x04; X += 0x02) {
+-:
+$80/85B4 C2 20       REP #$20                ;     A = JOY1[X]
+$80/85B6 BD 18 42    LDA $4218,x             ;
+$80/85B9 89 0F 00    BIT #$000F              ;     if(A & 0x000F) {
+$80/85BC F0 08       BEQ +else               ;         // non-standard controller connected, ignore input
+$80/85BE 74 54       STZ $54,x               ;         joy1[X] = 0x0000
+$80/85C0 74 58       STZ $58,x               ;         joy1_edge[X] = 0x0000
+$80/85C2 74 50       STZ $50,x               ;         joy1_old[X] = 0x0000
+$80/85C4 80 0C       BRA +if                 ;     } else {
++else:
+$80/85C6 95 54       STA $54,x               ;         joy1[X] = A
+$80/85C8 55 50       EOR $50,x               ;         joy1_edge[X] = (A ^ joy1_old[X]) & joy1[X]
+$80/85CA 35 54       AND $54,x               ;
+$80/85CC 95 58       STA $58,x               ;
+$80/85CE B5 54       LDA $54,x               ;         joy1_old[X] = joy1[X]
+$80/85D0 95 50       STA $50,x               ;     }
++if:
+$80/85D2 E8          INX                     ;
+$80/85D3 E8          INX                     ;
+$80/85D4 E0 04       CPX #$04                ;
+$80/85D6 D0 DC       BNE -                   ; }
+$80/85D8 E2 20       SEP #$20                ;
+$80/85DA 60          RTS                     ;
 
 
-$80/85EE 08          PHP                     
-$80/85EF E2 30       SEP #$30                A:0000 X:0004 Y:0000 P:envMXdiZC
-$80/85F1 AD 12 42    LDA $4212  [$80:4212]   A:0000 X:0004 Y:0000 P:envMXdiZC
-$80/85F4 29 01       AND #$01                A:0002 X:0004 Y:0000 P:envMXdizC
-$80/85F6 D0 F9       BNE $F9    [$85F1]      A:0000 X:0004 Y:0000 P:envMXdiZC
-$80/85F8 A2 01       LDX #$01                A:0000 X:0004 Y:0000 P:envMXdiZC
-$80/85FA AD 1A 42    LDA $421A  [$80:421A]   A:0000 X:0001 Y:0000 P:envMXdizC
-$80/85FD 20 1D 86    JSR $861D  [$80:861D]   A:0000 X:0001 Y:0000 P:envMXdiZC
-$80/8600 A5 6D       LDA $6D    [$00:006D]   A:0000 X:0001 Y:0000 P:eNvMXdizc
-$80/8602 F0 07       BEQ $07    [$860B]      A:0000 X:0001 Y:0000 P:envMXdiZc
-$80/860B CA          DEX                     A:0000 X:0001 Y:0000 P:envMXdiZc
-$80/860C AD 18 42    LDA $4218  [$80:4218]   A:0000 X:0000 Y:0000 P:envMXdiZc
-$80/860F 20 1D 86    JSR $861D  [$80:861D]   A:0000 X:0000 Y:0000 P:envMXdiZc
-$80/8612 A5 6C       LDA $6C    [$00:006C]   A:0000 X:0000 Y:0000 P:eNvMXdizc
-$80/8614 F0 05       BEQ $05    [$861B]      A:0000 X:0000 Y:0000 P:envMXdiZc
-$80/861B 28          PLP                     A:0000 X:0000 Y:0000 P:envMXdiZc
-$80/861C 60          RTS                     A:0000 X:0000 Y:0000 P:envMXdiZC
+$80/85EE 08          PHP                     ; while(HVBJOY & 0x01) // wait for controller auto read
+$80/85EF E2 30       SEP #$30                ;
+-wait:
+$80/85F1 AD 12 42    LDA $4212  [$80:4212]   ;
+$80/85F4 29 01       AND #$01                ;
+$80/85F6 D0 F9       BNE -wait               ;
+$80/85F8 A2 01       LDX #$01                ; X = 0x01
+$80/85FA AD 1A 42    LDA $421A  [$80:421A]   ; A = JOY2.lo
+$80/85FD 20 1D 86    JSR $861D  [$80:861D]   ; $861D()
+$80/8600 A5 6D       LDA $6D    [$00:006D]   ; if($6D) {
+$80/8602 F0 07       BEQ +                   ;
+$80/8604 20 64 86    JSR $8664               ;     $8664()
+$80/8607 64 6D       STZ $6D                 ;     $6D = 0x00
+$80/8608 28          PLP                     ;     return
+$80/8609 60          RTS                     ; }
++:
+$80/860B CA          DEX                     ; X = 0x00
+$80/860C AD 18 42    LDA $4218  [$80:4218]   ; A = JOY1.lo
+$80/860F 20 1D 86    JSR $861D  [$80:861D]   ; $861D()
+$80/8612 A5 6C       LDA $6C    [$00:006C]   ; if($6C) {
+$80/8614 F0 05       BEQ +                   ;
+$80/8616 20 64 86    JSR $8664               ;     $8664()
+$80/8619 64 6C       STZ $6C                 ;     $6C = 0x00
++:
+$80/861B 28          PLP                     ; }
+$80/861C 60          RTS                     ;
 
-$80/861D 85 B1       STA $B1    [$00:00B1]   A:0000 X:0001 Y:0000 P:envMXdiZC
-$80/861F 29 0F       AND #$0F                A:0000 X:0001 Y:0000 P:envMXdiZC
-$80/8621 C9 01       CMP #$01                A:0000 X:0001 Y:0000 P:envMXdiZC
-$80/8623 F0 0D       BEQ $0D    [$8632]      A:0000 X:0001 Y:0000 P:eNvMXdizc
-$80/8625 74 5C       STZ $5C,x  [$00:005D]   A:0000 X:0001 Y:0000 P:eNvMXdizc
-$80/8627 74 64       STZ $64,x  [$00:0065]   A:0000 X:0001 Y:0000 P:eNvMXdizc
-$80/8629 74 62       STZ $62,x  [$00:0063]   A:0000 X:0001 Y:0000 P:eNvMXdizc
-$80/862B 74 66       STZ $66,x  [$00:0067]   A:0000 X:0001 Y:0000 P:eNvMXdizc
-$80/862D 74 68       STZ $68,x  [$00:0069]   A:0000 X:0001 Y:0000 P:eNvMXdizc
-$80/862F 74 6A       STZ $6A,x  [$00:006B]   A:0000 X:0001 Y:0000 P:eNvMXdizc
-$80/8631 60          RTS                     A:0000 X:0001 Y:0000 P:eNvMXdizc
 
-$80/8664 08          PHP                     A:BF01 X:0000 Y:0034 P:eNvMXdizC
-$80/8665 E2 30       SEP #$30                A:BF01 X:0000 Y:0034 P:eNvMXdizC
-$80/8667 B5 5C       LDA $5C,x  [$00:005C]   A:BF01 X:0000 Y:0034 P:eNvMXdizC
-$80/8669 F0 39       BEQ $39    [$86A4]      A:BF00 X:0000 Y:0034 P:envMXdiZC
-$80/86A4 A9 80       LDA #$80                A:BF00 X:0000 Y:0034 P:envMXdiZC
-$80/86A6 95 60       STA $60,x  [$00:0060]   A:BF80 X:0000 Y:0034 P:eNvMXdizC
-$80/86A8 28          PLP                     A:BF80 X:0000 Y:0034 P:eNvMXdizC
-$80/86A9 60          RTS                     A:BF80 X:0000 Y:0034 P:eNvMXdizC
+$80/861D 85 B1       STA $B1    [$00:00B1]   ; $B1 = A
+$80/861F 29 0F       AND #$0F                ; if(A & 0x0F != 0x01) {
+$80/8621 C9 01       CMP #$01                ;
+$80/8623 F0 0D       BEQ +                   ;
+$80/8625 74 5C       STZ $5C,x  [$00:005D]   ;     $5C[X] = 0x00
+$80/8627 74 64       STZ $64,x  [$00:0065]   ;     $64[X] = 0x00
+$80/8629 74 62       STZ $62,x  [$00:0063]   ;     $62[X] = 0x00
+$80/862B 74 66       STZ $66,x  [$00:0067]   ;     $66[X] = 0x00
+$80/862D 74 68       STZ $68,x  [$00:0069]   ;     $68[X] = 0x00
+$80/862F 74 6A       STZ $6A,x  [$00:006B]   ;     $6A[X] = 0x00
+$80/8631 60          RTS                     ; } else {
++:
+$80/8632                                     ; ???
 
-$80/86DB E2 10       SEP #$10                A:0180 X:00F0 Y:0000 P:eNVMXdizc
-$80/86DD C2 20       REP #$20                A:0180 X:00F0 Y:0000 P:eNVMXdizc
-$80/86DF 0B          PHD                     A:0180 X:00F0 Y:0000 P:eNVmXdizc
-$80/86E0 A9 00 00    LDA #$0000              A:0180 X:00F0 Y:0000 P:eNVmXdizc
-$80/86E3 5B          TCD                     A:0000 X:00F0 Y:0000 P:enVmXdiZc
-$80/86E4 E2 20       SEP #$20                A:0000 X:00F0 Y:0000 P:enVmXdiZc
-$80/86E6 A5 00       LDA $00    [$00:0000]   A:0000 X:00F0 Y:0000 P:enVMXdiZc
-$80/86E8 29 07       AND #$07                A:0002 X:00F0 Y:0000 P:enVMXdizc
-$80/86EA F0 1D       BEQ $1D    [$8709]      A:0002 X:00F0 Y:0000 P:enVMXdizc
-$80/86EC 89 01       BIT #$01                A:0002 X:00F0 Y:0000 P:enVMXdizc
-$80/86EE D0 19       BNE $19    [$8709]      A:0002 X:00F0 Y:0000 P:enVMXdiZc
-$80/86F0 85 A9       STA $A9    [$00:00A9]   A:0002 X:00F0 Y:0000 P:enVMXdiZc
-$80/86F2 A5 03       LDA $03    [$00:0003]   A:0002 X:00F0 Y:0000 P:enVMXdiZc
-$80/86F4 29 FC       AND #$FC                A:0010 X:00F0 Y:0000 P:enVMXdizc
-$80/86F6 EB          XBA                     A:0010 X:00F0 Y:0000 P:enVMXdizc
-$80/86F7 A5 20       LDA $20    [$00:0020]   A:1000 X:00F0 Y:0000 P:enVMXdiZc
-$80/86F9 4A          LSR A                   A:1000 X:00F0 Y:0000 P:enVMXdiZc
-$80/86FA 4A          LSR A                   A:1000 X:00F0 Y:0000 P:enVMXdiZc
-$80/86FB 4A          LSR A                   A:1000 X:00F0 Y:0000 P:enVMXdiZc
-$80/86FC C2 20       REP #$20                A:1000 X:00F0 Y:0000 P:enVMXdiZc
-$80/86FE 85 A7       STA $A7    [$00:00A7]   A:1000 X:00F0 Y:0000 P:enVmXdiZc
-$80/8700 A5 22       LDA $22    [$00:0022]   A:1000 X:00F0 Y:0000 P:enVmXdiZc
-$80/8702 0A          ASL A                   A:0000 X:00F0 Y:0000 P:enVmXdiZc
-$80/8703 0A          ASL A                   A:0000 X:00F0 Y:0000 P:enVmXdiZc
-$80/8704 29 E0 03    AND #$03E0              A:0000 X:00F0 Y:0000 P:enVmXdiZc
-$80/8707 04 A7       TSB $A7    [$00:00A7]   A:0000 X:00F0 Y:0000 P:enVmXdiZc
-$80/8709 E2 20       SEP #$20                A:0000 X:00F0 Y:0000 P:enVmXdiZc
-$80/870B A5 48       LDA $48    [$00:0048]   A:0000 X:00F0 Y:0000 P:enVMXdiZc
-$80/870D 89 80       BIT #$80                A:0081 X:00F0 Y:0000 P:eNVMXdizc
-$80/870F D0 08       BNE $08    [$8719]      A:0081 X:00F0 Y:0000 P:eNVMXdizc
-$80/8719 A5 4E       LDA $4E    [$00:004E]   A:0081 X:00F0 Y:0000 P:eNVMXdizc
-$80/871B 89 80       BIT #$80                A:008F X:00F0 Y:0000 P:eNVMXdizc
-$80/871D F0 04       BEQ $04    [$8723]      A:008F X:00F0 Y:0000 P:eNVMXdizc
-$80/871F 22 10 88 80 JSL $808810[$80:8810]   A:008F X:00F0 Y:0000 P:eNVMXdizc
-$80/8723 A9 01       LDA #$01                A:0000 X:0000 Y:0000 P:envMXdiZC
-$80/8725 85 98       STA $98    [$00:0098]   A:0001 X:0000 Y:0000 P:envMXdizC
-$80/8727 A5 98       LDA $98    [$00:0098]   A:0001 X:0000 Y:0000 P:envMXdizC
-$80/8729 D0 FC       BNE $FC    [$8727]      A:0001 X:0000 Y:0000 P:envMXdizC   <==== WAIT FOR NMI
-$80/872B 64 15       STZ $15    [$00:0015]   A:0000 X:0000 Y:0000 P:envMXdiZC
-$80/872D 64 16       STZ $16    [$00:0016]   A:0000 X:0000 Y:0000 P:envMXdiZC
-$80/872F 2B          PLD                     A:0000 X:0000 Y:0000 P:envMXdiZC
-$80/8730 6B          RTL                     A:0000 X:0000 Y:0000 P:envMXdizC
 
-$80/8731 C2 30       REP #$30                A:0777 X:0030 Y:0000 P:envmxdizC
-$80/8733 0B          PHD                     A:0777 X:0030 Y:0000 P:envmxdizC
-$80/8734 A9 00 00    LDA #$0000              A:0777 X:0030 Y:0000 P:envmxdizC
-$80/8737 5B          TCD                     A:0000 X:0030 Y:0000 P:envmxdiZC
-$80/8738 E2 30       SEP #$30                A:0000 X:0030 Y:0000 P:envmxdiZC
-$80/873A 8B          PHB                     A:0000 X:0030 Y:0000 P:envMXdiZC
-$80/873B 48          PHA                     A:0000 X:0030 Y:0000 P:envMXdiZC
-$80/873C AB          PLB                     A:0000 X:0030 Y:0000 P:envMXdiZC
-$80/873D A5 9E       LDA $9E    [$00:009E]   A:0000 X:0030 Y:0000 P:envMXdiZC
-$80/873F 38          SEC                     A:0080 X:0030 Y:0000 P:eNvMXdizC
-$80/8740 E5 9D       SBC $9D    [$00:009D]   A:0080 X:0030 Y:0000 P:eNvMXdizC
-$80/8742 F0 26       BEQ $26    [$876A]      A:0080 X:0030 Y:0000 P:eNvMXdizC
-$80/8744 A8          TAY                     A:0080 X:0030 Y:0000 P:eNvMXdizC
-$80/8745 A5 9D       LDA $9D    [$00:009D]   A:0080 X:0030 Y:0080 P:eNvMXdizC
-$80/8747 C2 20       REP #$20                A:0000 X:0030 Y:0080 P:envMXdiZC
-$80/8749 0A          ASL A                   A:0000 X:0030 Y:0080 P:envmXdiZC
-$80/874A 0A          ASL A                   A:0000 X:0030 Y:0080 P:envmXdiZc
-$80/874B 18          CLC                     A:0000 X:0030 Y:0080 P:envmXdiZc
-$80/874C 69 00 01    ADC #$0100              A:0000 X:0030 Y:0080 P:envmXdiZc
-$80/874F 8D 81 21    STA $2181  [$00:2181]   A:0100 X:0030 Y:0080 P:envmXdizc
-$80/8752 E2 30       SEP #$30                A:0100 X:0030 Y:0080 P:envmXdizc
-$80/8754 9C 83 21    STZ $2183  [$00:2183]   A:0100 X:0030 Y:0080 P:envMXdizc
-$80/8757 A9 D0       LDA #$D0                A:0100 X:0030 Y:0080 P:envMXdizc
-$80/8759 A2 F0       LDX #$F0                A:01D0 X:0030 Y:0080 P:eNvMXdizc
-$80/875B 8D 80 21    STA $2180  {$7E:0100}   A:01D0 X:00F0 Y:0080 P:eNvMXdizc
-$80/875E 8E 80 21    STX $2180  [$00:2180]   A:01D0 X:00F0 Y:0080 P:eNvMXdizc
-$80/8761 9C 80 21    STZ $2180  [$00:2180]   A:01D0 X:00F0 Y:0080 P:eNvMXdizc
-$80/8764 9C 80 21    STZ $2180  [$00:2180]   A:01D0 X:00F0 Y:0080 P:eNvMXdizc
-$80/8767 88          DEY                     A:01D0 X:00F0 Y:0080 P:eNvMXdizc
-$80/8768 D0 F1       BNE $F1    [$875B]      A:01D0 X:00F0 Y:007F P:envMXdizc
-$80/876A AB          PLB                     A:01D0 X:00F0 Y:0000 P:envMXdiZc
-$80/876B 2B          PLD                     A:01D0 X:00F0 Y:0000 P:eNvMXdizc
-$80/876C 6B          RTL                     A:01D0 X:00F0 Y:0000 P:envMXdizc
+$80/8664 08          PHP                     ; if($5C[X]) {
+$80/8665 E2 30       SEP #$30                ;
+$80/8667 B5 5C       LDA $5C,x  [$00:005C]   ;     ???
+$80/8669 F0 39       BEQ $39    [$86A4]      ;
+$80/866B                                     ; }
++:
+$80/86A4 A9 80       LDA #$80                ;
+$80/86A6 95 60       STA $60,x  [$00:0060]   ; $60[X] = 0x80
+$80/86A8 28          PLP                     ;
+$80/86A9 60          RTS                     ;
 
-$80/876D C2 20       REP #$20                A:0000 X:0000 Y:0000 P:envMXdiZC
-$80/876F 0B          PHD                     A:0000 X:0000 Y:0000 P:envmXdiZC
-$80/8770 A9 00 03    LDA #$0300              A:0000 X:0000 Y:0000 P:envmXdiZC
-$80/8773 5B          TCD                     A:0300 X:0000 Y:0000 P:envmXdizC
-$80/8774 A5 20       LDA $20    [$00:0320]   A:0300 X:0000 Y:0000 P:envmXdizC
-$80/8776 85 00       STA $00    [$00:0300]   A:5555 X:0000 Y:0000 P:envmXdizC
-$80/8778 A5 22       LDA $22    [$00:0322]   A:5555 X:0000 Y:0000 P:envmXdizC
-$80/877A 85 02       STA $02    [$00:0302]   A:5555 X:0000 Y:0000 P:envmXdizC
-$80/877C A5 24       LDA $24    [$00:0324]   A:5555 X:0000 Y:0000 P:envmXdizC
-$80/877E 85 04       STA $04    [$00:0304]   A:5555 X:0000 Y:0000 P:envmXdizC
-$80/8780 A5 26       LDA $26    [$00:0326]   A:5555 X:0000 Y:0000 P:envmXdizC
-$80/8782 85 06       STA $06    [$00:0306]   A:5555 X:0000 Y:0000 P:envmXdizC
-$80/8784 A5 28       LDA $28    [$00:0328]   A:5555 X:0000 Y:0000 P:envmXdizC
-$80/8786 85 08       STA $08    [$00:0308]   A:5555 X:0000 Y:0000 P:envmXdizC
-$80/8788 A5 2A       LDA $2A    [$00:032A]   A:5555 X:0000 Y:0000 P:envmXdizC
-$80/878A 85 0A       STA $0A    [$00:030A]   A:5555 X:0000 Y:0000 P:envmXdizC
-$80/878C A5 2C       LDA $2C    [$00:032C]   A:5555 X:0000 Y:0000 P:envmXdizC
-$80/878E 85 0C       STA $0C    [$00:030C]   A:5555 X:0000 Y:0000 P:envmXdizC
-$80/8790 A5 2E       LDA $2E    [$00:032E]   A:5555 X:0000 Y:0000 P:envmXdizC
-$80/8792 85 0E       STA $0E    [$00:030E]   A:5555 X:0000 Y:0000 P:envmXdizC
-$80/8794 A5 30       LDA $30    [$00:0330]   A:5555 X:0000 Y:0000 P:envmXdizC
-$80/8796 85 10       STA $10    [$00:0310]   A:5555 X:0000 Y:0000 P:envmXdizC
-$80/8798 A5 32       LDA $32    [$00:0332]   A:5555 X:0000 Y:0000 P:envmXdizC
-$80/879A 85 12       STA $12    [$00:0312]   A:5555 X:0000 Y:0000 P:envmXdizC
-$80/879C A5 34       LDA $34    [$00:0334]   A:5555 X:0000 Y:0000 P:envmXdizC
-$80/879E 85 14       STA $14    [$00:0314]   A:5555 X:0000 Y:0000 P:envmXdizC
-$80/87A0 A5 36       LDA $36    [$00:0336]   A:5555 X:0000 Y:0000 P:envmXdizC
-$80/87A2 85 16       STA $16    [$00:0316]   A:5555 X:0000 Y:0000 P:envmXdizC
-$80/87A4 A5 38       LDA $38    [$00:0338]   A:5555 X:0000 Y:0000 P:envmXdizC
-$80/87A6 85 18       STA $18    [$00:0318]   A:5555 X:0000 Y:0000 P:envmXdizC
-$80/87A8 A5 3A       LDA $3A    [$00:033A]   A:5555 X:0000 Y:0000 P:envmXdizC
-$80/87AA 85 1A       STA $1A    [$00:031A]   A:5555 X:0000 Y:0000 P:envmXdizC
-$80/87AC A5 3C       LDA $3C    [$00:033C]   A:5555 X:0000 Y:0000 P:envmXdizC
-$80/87AE 85 1C       STA $1C    [$00:031C]   A:5555 X:0000 Y:0000 P:envmXdizC
-$80/87B0 A5 3E       LDA $3E    [$00:033E]   A:5555 X:0000 Y:0000 P:envmXdizC
-$80/87B2 85 1E       STA $1E    [$00:031E]   A:5555 X:0000 Y:0000 P:envmXdizC
-$80/87B4 E2 20       SEP #$20                A:5555 X:0000 Y:0000 P:envmXdizC
-$80/87B6 A9 00       LDA #$00                A:5555 X:0000 Y:0000 P:envMXdizC
-$80/87B8 8F 9D 00 00 STA $00009D[$00:009D]   A:5500 X:0000 Y:0000 P:envMXdiZC
-$80/87BC AF A0 00 00 LDA $0000A0[$00:00A0]   A:5500 X:0000 Y:0000 P:envMXdiZC
-$80/87C0 8F 9E 00 00 STA $00009E[$00:009E]   A:5580 X:0000 Y:0000 P:eNvMXdizC
-$80/87C4 2B          PLD                     A:5580 X:0000 Y:0000 P:eNvMXdizC
-$80/87C5 6B          RTL                     A:5580 X:0000 Y:0000 P:envMXdizC
 
-$80/87E7 C2 30       REP #$30                A:1800 X:077B Y:1780 P:envmxdIZC
-$80/87E9 0B          PHD                     A:1800 X:077B Y:1780 P:envmxdIZC
-$80/87EA A9 00 03    LDA #$0300              A:1800 X:077B Y:1780 P:envmxdIZC
-$80/87ED 5B          TCD                     A:0300 X:077B Y:1780 P:envmxdIzC
-$80/87EE A2 00 00    LDX #$0000              A:0300 X:077B Y:1780 P:envmxdIzC
-$80/87F1 A9 55 55    LDA #$5555              A:0300 X:0000 Y:1780 P:envmxdIZC
-$80/87F4 95 00       STA $00,x  [$00:0300]   A:5555 X:0000 Y:1780 P:envmxdIzC
-$80/87F6 95 20       STA $20,x  [$00:0320]   A:5555 X:0000 Y:1780 P:envmxdIzC
-$80/87F8 E8          INX                     A:5555 X:0000 Y:1780 P:envmxdIzC
-$80/87F9 E8          INX                     A:5555 X:0001 Y:1780 P:envmxdIzC
-$80/87FA E0 20 00    CPX #$0020              A:5555 X:0002 Y:1780 P:envmxdIzC
-$80/87FD D0 F5       BNE $F5    [$87F4]      A:5555 X:0002 Y:1780 P:eNvmxdIzc
-$80/87FF E2 20       SEP #$20                A:5555 X:0020 Y:1780 P:envmxdIZC
-$80/8801 A9 80       LDA #$80                A:5555 X:0020 Y:1780 P:envMxdIZC
-$80/8803 8F A0 00 00 STA $0000A0[$00:00A0]   A:5580 X:0020 Y:1780 P:eNvMxdIzC
-$80/8807 8F 9E 00 00 STA $00009E[$00:009E]   A:5580 X:0020 Y:1780 P:eNvMxdIzC
-$80/880B 9C 9D 00    STZ $009D  [$80:009D]   A:5580 X:0020 Y:1780 P:eNvMxdIzC
-$80/880E 2B          PLD                     A:5580 X:0020 Y:1780 P:eNvMxdIzC
-$80/880F 6B          RTL                     A:5580 X:0020 Y:1780 P:envMxdIzC
+mouse_bios_strings:
+$80/86AA
+"NINTENDO SHVC MOUSE BIOS Ver1.00"
+"END OF MOUSE BIOS"
 
-$80/8810 0B          PHD                     A:008F X:00F0 Y:0000 P:eNVMXdizc
-$80/8811 8B          PHB                     A:008F X:00F0 Y:0000 P:eNVMXdizc
-$80/8812 C2 20       REP #$20                A:008F X:00F0 Y:0000 P:eNVMXdizc
-$80/8814 A9 00 00    LDA #$0000              A:008F X:00F0 Y:0000 P:eNVmXdizc
-$80/8817 5B          TCD                     A:0000 X:00F0 Y:0000 P:enVmXdiZc
-$80/8818 E2 30       SEP #$30                A:0000 X:00F0 Y:0000 P:enVmXdiZc
-$80/881A A9 80       LDA #$80                A:0000 X:00F0 Y:0000 P:enVMXdiZc
-$80/881C 48          PHA                     A:0080 X:00F0 Y:0000 P:eNVMXdizc
-$80/881D AB          PLB                     A:0080 X:00F0 Y:0000 P:eNVMXdizc
-$80/881E A9 80       LDA #$80                A:0080 X:00F0 Y:0000 P:eNVMXdizc
-$80/8820 24 4E       BIT $4E    [$00:004E]   A:0080 X:00F0 Y:0000 P:eNVMXdizc
-$80/8822 F0 09       BEQ $09    [$882D]      A:0080 X:00F0 Y:0000 P:eNvMXdizc
-$80/8824 14 41       TRB $41    [$00:0041]   A:0080 X:00F0 Y:0000 P:eNvMXdizc
-$80/8826 A9 03       LDA #$03                A:0080 X:00F0 Y:0000 P:eNvMXdizc
-$80/8828 85 98       STA $98    [$00:0098]   A:0003 X:00F0 Y:0000 P:envMXdizc
-$80/882A 20 16 83    JSR $8316  [$80:8316]   A:0003 X:00F0 Y:0000 P:envMXdizc
-$80/882D AB          PLB                     A:0000 X:0000 Y:0000 P:envMXdiZC
-$80/882E 2B          PLD                     A:0000 X:0000 Y:0000 P:eNvMXdizC
-$80/882F 6B          RTL                     A:0000 X:0000 Y:0000 P:envMXdiZC
+$80/86DB E2 10       SEP #$10                ;
+$80/86DD C2 20       REP #$20                ;
+$80/86DF 0B          PHD                     ; phd()
+$80/86E0 A9 00 00    LDA #$0000              ; D = 0x0000
+$80/86E3 5B          TCD                     ;
+$80/86E4 E2 20       SEP #$20                ; A = $00 & 0x07
+$80/86E6 A5 00       LDA $00    [$00:0000]   ;
+$80/86E8 29 07       AND #$07                ;
+$80/86EA F0 1D       BEQ +                   ; if(A && !(A & 0x01)) {
+$80/86EC 89 01       BIT #$01                ;
+$80/86EE D0 19       BNE +                   ;
+$80/86F0 85 A9       STA $A9    [$00:00A9]   ;     $A9 = A
+$80/86F2 A5 03       LDA $03    [$00:0003]   ;     $A7 = (($03 & 0xFC) << 8) + ($20 >> 3)
+$80/86F4 29 FC       AND #$FC                ;
+$80/86F6 EB          XBA                     ;
+$80/86F7 A5 20       LDA $20    [$00:0020]   ;
+$80/86F9 4A          LSR A                   ;
+$80/86FA 4A          LSR A                   ;
+$80/86FB 4A          LSR A                   ;
+$80/86FC C2 20       REP #$20                ;
+$80/86FE 85 A7       STA $A7    [$00:00A7]   ;
+$80/8700 A5 22       LDA $22    [$00:0022]   ;     $A7 |= ($22 << 2) & 0x03E0
+$80/8702 0A          ASL A                   ;
+$80/8703 0A          ASL A                   ;
+$80/8704 29 E0 03    AND #$03E0              ;
+$80/8707 04 A7       TSB $A7    [$00:00A7]   ; }
++:
+$80/8709 E2 20       SEP #$20                ; if(!($48 & 0x80)) {
+$80/870B A5 48       LDA $48    [$00:0048]   ;
+$80/870D 89 80       BIT #$80                ;     ???
+$80/870F D0 08       BNE +                   ;
+$80/8711                                     ; }
++:
+$80/8719 A5 4E       LDA $4E    [$00:004E]   ; if($4E & 0x80) {
+$80/871B 89 80       BIT #$80                ; 
+$80/871D F0 04       BEQ +                   ;     $808810()
+$80/871F 22 10 88 80 JSL $808810[$80:8810]   ; }
++:
+$80/8723 A9 01       LDA #$01                ; $98 = 0x01
+$80/8725 85 98       STA $98    [$00:0098]   ;
+-:
+$80/8727 A5 98       LDA $98    [$00:0098]   ; while($98) // some sort of flag controlled by nmi
+$80/8729 D0 FC       BNE -                   ;
+$80/872B 64 15       STZ $15    [$00:0015]   ; $15 = 0x00
+$80/872D 64 16       STZ $16    [$00:0016]   ; $16 = 0x00
+$80/872F 2B          PLD                     ; pld()
+$80/8730 6B          RTL                     ;
 
-$80/8830 0B          PHD                     A:0000 X:1000 Y:0020 P:envmxdiZc
-$80/8831 8B          PHB                     A:0000 X:1000 Y:0020 P:envmxdiZc
-$80/8832 C2 20       REP #$20                A:0000 X:1000 Y:0020 P:envmxdiZc
-$80/8834 A9 00 00    LDA #$0000              A:0000 X:1000 Y:0020 P:envmxdiZc
-$80/8837 5B          TCD                     A:0000 X:1000 Y:0020 P:envmxdiZc
-$80/8838 E2 20       SEP #$20                A:0000 X:1000 Y:0020 P:envmxdiZc
-$80/883A A9 80       LDA #$80                A:0000 X:1000 Y:0020 P:envMxdiZc
-$80/883C 48          PHA                     A:0080 X:1000 Y:0020 P:eNvMxdizc
-$80/883D AB          PLB                     A:0080 X:1000 Y:0020 P:eNvMxdizc
-$80/883E A5 9B       LDA $9B    [$00:009B]   A:0080 X:1000 Y:0020 P:eNvMxdizc
-$80/8840 C9 80       CMP #$80                A:0000 X:1000 Y:0020 P:envMxdiZc
-$80/8842 D0 09       BNE $09    [$884D]      A:0000 X:1000 Y:0020 P:eNvMxdizc
-$80/8844 A5 4E       LDA $4E    [$00:004E]   A:0080 X:0078 Y:0020 P:envMXdiZC
-$80/8846 29 80       AND #$80                A:008F X:0078 Y:0020 P:eNvMXdizC
-$80/8848 F0 F4       BEQ $F4    [$883E]      A:0080 X:0078 Y:0020 P:eNvMXdizC
-$80/884A 20 46 85    JSR $8546  [$80:8546]   A:0080 X:0078 Y:0020 P:eNvMXdizC
-$80/884D E2 30       SEP #$30                A:0000 X:1000 Y:0020 P:eNvMxdizc
-$80/884F E6 9C       INC $9C    [$00:009C]   A:0000 X:0000 Y:0020 P:eNvMXdizc
-$80/8851 A5 9B       LDA $9B    [$00:009B]   A:0000 X:0000 Y:0020 P:envMXdizc
-$80/8853 AA          TAX                     A:0000 X:0000 Y:0020 P:envMXdiZc
-$80/8854 18          CLC                     A:0000 X:0000 Y:0020 P:envMXdiZc
-$80/8855 69 08       ADC #$08                A:0000 X:0000 Y:0020 P:envMXdiZc
-$80/8857 85 9B       STA $9B    [$00:009B]   A:0008 X:0000 Y:0020 P:envMXdizc
-$80/8859 AB          PLB                     A:0008 X:0000 Y:0020 P:envMXdizc
-$80/885A 2B          PLD                     A:0008 X:0000 Y:0020 P:eNvMXdizc
-$80/885B 6B          RTL                     A:0008 X:0000 Y:0020 P:envMXdizc
 
-$80/885C 0B          PHD                     A:BF01 X:0000 Y:0034 P:envMXdiZC
-$80/885D 8B          PHB                     A:BF01 X:0000 Y:0034 P:envMXdiZC
-$80/885E C2 30       REP #$30                A:BF01 X:0000 Y:0034 P:envMXdiZC
-$80/8860 48          PHA                     A:BF01 X:0000 Y:0034 P:envmxdiZC
-$80/8861 A9 00 00    LDA #$0000              A:BF01 X:0000 Y:0034 P:envmxdiZC
-$80/8864 5B          TCD                     A:0000 X:0000 Y:0034 P:envmxdiZC
-$80/8865 E2 30       SEP #$30                A:0000 X:0000 Y:0034 P:envmxdiZC
-$80/8867 A9 80       LDA #$80                A:0000 X:0000 Y:0034 P:envMXdiZC
-$80/8869 48          PHA                     A:0080 X:0000 Y:0034 P:eNvMXdizC
-$80/886A AB          PLB                     A:0080 X:0000 Y:0034 P:eNvMXdizC
-$80/886B C2 20       REP #$20                A:0080 X:0000 Y:0034 P:eNvMXdizC
-$80/886D 68          PLA                     A:0080 X:0000 Y:0034 P:eNvmXdizC
-$80/886E E2 20       SEP #$20                A:BF01 X:0000 Y:0034 P:eNvmXdizC
-$80/8870 95 5E       STA $5E,x  [$00:005E]   A:BF01 X:0000 Y:0034 P:eNvMXdizC
-$80/8872 20 64 86    JSR $8664  [$80:8664]   A:BF01 X:0000 Y:0034 P:eNvMXdizC
-$80/8875 AB          PLB                     A:BF80 X:0000 Y:0034 P:eNvMXdizC
-$80/8876 2B          PLD                     A:BF80 X:0000 Y:0034 P:eNvMXdizC
-$80/8877 6B          RTL                     A:BF80 X:0000 Y:0034 P:envMXdizC
+$80/8731 C2 30       REP #$30                ;
+$80/8733 0B          PHD                     ; phd()
+$80/8734 A9 00 00    LDA #$0000              ; D = 0x0000
+$80/8737 5B          TCD                     ;
+$80/8738 E2 30       SEP #$30                ;
+$80/873A 8B          PHB                     ; phb()
+$80/873B 48          PHA                     ; B = 0x00
+$80/873C AB          PLB                     ;
+$80/873D A5 9E       LDA $9E    [$00:009E]   ; if($9E != $9D) {
+$80/873F 38          SEC                     ;
+$80/8740 E5 9D       SBC $9D    [$00:009D]   ;
+$80/8742 F0 26       BEQ +                   ;
+$80/8744 A8          TAY                     ;     Y = $9E - $9D;
+$80/8745 A5 9D       LDA $9D    [$00:009D]   ;     WMADD = $9D * 4 + 0x0100
+$80/8747 C2 20       REP #$20                ;
+$80/8749 0A          ASL A                   ;
+$80/874A 0A          ASL A                   ;
+$80/874B 18          CLC                     ;
+$80/874C 69 00 01    ADC #$0100              ;
+$80/874F 8D 81 21    STA $2181  [$00:2181]   ;
+$80/8752 E2 30       SEP #$30                ;
+$80/8754 9C 83 21    STZ $2183  [$00:2183]   ;
+$80/8757 A9 D0       LDA #$D0                ;     do{
+$80/8759 A2 F0       LDX #$F0                ;
+-:
+$80/875B 8D 80 21    STA $2180  {$7E:0100}   ;         WMDATA = 0xD0
+$80/875E 8E 80 21    STX $2180  [$00:2180]   ;         WMDATA = 0xF0
+$80/8761 9C 80 21    STZ $2180  [$00:2180]   ;         WMDATA = 0x00
+$80/8764 9C 80 21    STZ $2180  [$00:2180]   ;         WMDATA = 0x00
+$80/8767 88          DEY                     ;     } while(--Y)
+$80/8768 D0 F1       BNE -                   ; }
++
+$80/876A AB          PLB                     ; plb()
+$80/876B 2B          PLD                     ; pld()
+$80/876C 6B          RTL                     ;
 
-$80/8878 0B          PHD                     A:5507 X:0320 Y:1780 P:envMxdizC
-$80/8879 8B          PHB                     A:5507 X:0320 Y:1780 P:envMxdizC
-$80/887A C2 20       REP #$20                A:5507 X:0320 Y:1780 P:envMxdizC
-$80/887C A9 00 00    LDA #$0000              A:5507 X:0320 Y:1780 P:envmxdizC
-$80/887F 5B          TCD                     A:0000 X:0320 Y:1780 P:envmxdiZC
-$80/8880 E2 20       SEP #$20                A:0000 X:0320 Y:1780 P:envmxdiZC
-$80/8882 A9 80       LDA #$80                A:0000 X:0320 Y:1780 P:envMxdiZC
-$80/8884 48          PHA                     A:0080 X:0320 Y:1780 P:eNvMxdizC
-$80/8885 AB          PLB                     A:0080 X:0320 Y:1780 P:eNvMxdizC
-$80/8886 C2 10       REP #$10                A:0080 X:0320 Y:1780 P:eNvMxdizC
-$80/8888 AD 40 21    LDA $2140  [$80:2140]   A:0080 X:0320 Y:1780 P:eNvMxdizC
-$80/888B 10 FB       BPL $FB    [$8888]      A:0080 X:0320 Y:1780 P:eNvMxdizC
-$80/888D A5 B3       LDA $B3    [$00:00B3]   A:0080 X:0320 Y:1780 P:eNvMxdizC
-$80/888F 8D 42 21    STA $2142  [$80:2142]   A:0007 X:0320 Y:1780 P:envMxdizC
-$80/8892 C9 08       CMP #$08                A:0007 X:0320 Y:1780 P:envMxdizC
-$80/8894 F0 04       BEQ $04    [$889A]      A:0007 X:0320 Y:1780 P:eNvMxdizc
-$80/8896 C9 09       CMP #$09                A:0007 X:0320 Y:1780 P:eNvMxdizc
-$80/8898 D0 07       BNE $07    [$88A1]      A:0007 X:0320 Y:1780 P:eNvMxdizc
-$80/889A A5 B6       LDA $B6    [$00:00B6]   A:0009 X:009E Y:0001 P:envMxdiZC
-$80/889C 8D 43 21    STA $2143  [$80:2143]   A:00D0 X:009E Y:0001 P:eNvMxdizC
-$80/889F 80 18       BRA $18    [$88B9]      A:00D0 X:009E Y:0001 P:eNvMxdizC
-$80/88A1 C9 03       CMP #$03                A:0007 X:0320 Y:1780 P:eNvMxdizc
-$80/88A3 D0 07       BNE $07    [$88AC]      A:0007 X:0320 Y:1780 P:envMxdizC
-$80/88A5 A5 B4       LDA $B4    [$00:00B4]   A:0003 X:0072 Y:0001 P:envMxdiZC
-$80/88A7 8D 43 21    STA $2143  [$80:2143]   A:0001 X:0072 Y:0001 P:envMxdizC
-$80/88AA 80 0D       BRA $0D    [$88B9]      A:0001 X:0072 Y:0001 P:envMxdizC
-$80/88AC C9 04       CMP #$04                A:0007 X:0320 Y:1780 P:envMxdizC
-$80/88AE F0 04       BEQ $04    [$88B4]      A:0007 X:0320 Y:1780 P:envMxdizC
-$80/88B0 C9 06       CMP #$06                A:0007 X:0320 Y:1780 P:envMxdizC
-$80/88B2 D0 05       BNE $05    [$88B9]      A:0007 X:0320 Y:1780 P:envMxdizC
-$80/88B4 A5 B5       LDA $B5    [$00:00B5]   A:0004 X:0018 Y:0001 P:envMxdiZC
-$80/88B6 8D 43 21    STA $2143  [$80:2143]   A:0020 X:0018 Y:0001 P:envMxdizC
-$80/88B9 A9 80       LDA #$80                A:0007 X:0320 Y:1780 P:envMxdizC
-$80/88BB 8D 40 21    STA $2140  [$80:2140]   A:0080 X:0320 Y:1780 P:eNvMxdizC
-$80/88BE AD 40 21    LDA $2140  [$80:2140]   A:0080 X:0320 Y:1780 P:eNvMxdizC
-$80/88C1 30 FB       BMI $FB    [$88BE]      A:0080 X:0320 Y:1780 P:eNvMxdizC
-$80/88C3 A9 00       LDA #$00                A:0000 X:0320 Y:1780 P:envMxdiZC
-$80/88C5 8D 40 21    STA $2140  [$80:2140]   A:0000 X:0320 Y:1780 P:envMxdiZC
-$80/88C8 A5 B3       LDA $B3    [$00:00B3]   A:0000 X:0320 Y:1780 P:envMxdiZC
-$80/88CA C9 01       CMP #$01                A:0007 X:0320 Y:1780 P:envMxdizC
-$80/88CC F0 04       BEQ $04    [$88D2]      A:0007 X:0320 Y:1780 P:envMxdizC
-$80/88CE 5C 55 89 80 JMP $808955[$80:8955]   A:0007 X:0320 Y:1780 P:envMxdizC
-$80/88D2 AD 40 21    LDA $2140  [$80:2140]   A:0001 X:0070 Y:0080 P:envMxdiZC
-$80/88D5 10 FB       BPL $FB    [$88D2]      A:0000 X:0070 Y:0080 P:envMxdiZC
-$80/88D7 C2 20       REP #$20                A:0080 X:0070 Y:0080 P:eNvMxdizC
-$80/88D9 A0 00 00    LDY #$0000              A:0080 X:0070 Y:0080 P:eNvmxdizC
-$80/88DC B7 B7       LDA [$B7],y[$80:BFC9]   A:0080 X:0070 Y:0000 P:envmxdiZC
-$80/88DE 8D 42 21    STA $2142  [$80:2142]   A:1100 X:0070 Y:0000 P:envmxdizC
-$80/88E1 E2 20       SEP #$20                A:1100 X:0070 Y:0000 P:envmxdizC
-$80/88E3 A9 80       LDA #$80                A:1100 X:0070 Y:0000 P:envMxdizC
-$80/88E5 8D 40 21    STA $2140  [$80:2140]   A:1180 X:0070 Y:0000 P:eNvMxdizC
-$80/88E8 AD 40 21    LDA $2140  [$80:2140]   A:1180 X:0070 Y:0000 P:eNvMxdizC
-$80/88EB 30 FB       BMI $FB    [$88E8]      A:1180 X:0070 Y:0000 P:eNvMxdizC
-$80/88ED A9 00       LDA #$00                A:1100 X:0070 Y:0000 P:envMxdiZC
-$80/88EF 8D 40 21    STA $2140  [$80:2140]   A:1100 X:0070 Y:0000 P:envMxdiZC
-$80/88F2 AD 40 21    LDA $2140  [$80:2140]   A:1100 X:0070 Y:0000 P:envMxdiZC
-$80/88F5 10 FB       BPL $FB    [$88F2]      A:1100 X:0070 Y:0000 P:envMxdiZC
-$80/88F7 C2 20       REP #$20                A:1180 X:0070 Y:0000 P:eNvMxdizC
-$80/88F9 A0 02 00    LDY #$0002              A:1180 X:0070 Y:0000 P:eNvmxdizC
-$80/88FC B7 B7       LDA [$B7],y[$80:BFCB]   A:1180 X:0070 Y:0002 P:envmxdizC
-$80/88FE 8D 42 21    STA $2142  [$80:2142]   A:0351 X:0070 Y:0002 P:envmxdizC
-$80/8901 4A          LSR A                   A:0351 X:0070 Y:0002 P:envmxdizC
-$80/8902 85 BA       STA $BA    [$00:00BA]   A:01A8 X:0070 Y:0002 P:envmxdizC
-$80/8904 90 02       BCC $02    [$8908]      A:01A8 X:0070 Y:0002 P:envmxdizC
-$80/8906 E6 BA       INC $BA    [$00:00BA]   A:01A8 X:0070 Y:0002 P:envmxdizC
-$80/8908 E2 20       SEP #$20                A:01A8 X:0070 Y:0002 P:envmxdizC
-$80/890A A9 80       LDA #$80                A:01A8 X:0070 Y:0002 P:envMxdizC
-$80/890C 8D 40 21    STA $2140  [$80:2140]   A:0180 X:0070 Y:0002 P:eNvMxdizC
-$80/890F AD 40 21    LDA $2140  [$80:2140]   A:0180 X:0070 Y:0002 P:eNvMxdizC
-$80/8912 30 FB       BMI $FB    [$890F]      A:0180 X:0070 Y:0002 P:eNvMxdizC
-$80/8914 A9 00       LDA #$00                A:0100 X:0070 Y:0002 P:envMxdiZC
-$80/8916 8D 40 21    STA $2140  [$80:2140]   A:0100 X:0070 Y:0002 P:envMxdiZC
-$80/8919 C2 20       REP #$20                A:0100 X:0070 Y:0002 P:envMxdiZC
-$80/891B A0 04 00    LDY #$0004              A:0100 X:0070 Y:0002 P:envmxdiZC
-$80/891E B7 B7       LDA [$B7],y[$80:BFCD]   A:0100 X:0070 Y:0004 P:envmxdizC
-$80/8920 85 BC       STA $BC    [$00:00BC]   A:8032 X:0070 Y:0004 P:eNvmxdizC
-$80/8922 E2 20       SEP #$20                A:8032 X:0070 Y:0004 P:eNvmxdizC
-$80/8924 A0 06 00    LDY #$0006              A:8032 X:0070 Y:0004 P:eNvMxdizC
-$80/8927 B7 B7       LDA [$B7],y[$80:BFCF]   A:8032 X:0070 Y:0006 P:envMxdizC
-$80/8929 85 BE       STA $BE    [$00:00BE]   A:8081 X:0070 Y:0006 P:eNvMxdizC
-$80/892B A0 00 00    LDY #$0000              A:8081 X:0070 Y:0006 P:eNvMxdizC
-$80/892E C2 20       REP #$20                A:8081 X:0070 Y:0000 P:envMxdiZC
-$80/8930 B7 BC       LDA [$BC],y[$81:8032]   A:8081 X:0070 Y:0000 P:envmxdiZC
-$80/8932 C8          INY                     A:2B00 X:0070 Y:0000 P:envmxdizC
-$80/8933 C8          INY                     A:2B00 X:0070 Y:0001 P:envmxdizC
-$80/8934 AA          TAX                     A:2B00 X:0070 Y:0002 P:envmxdizC
-$80/8935 E2 20       SEP #$20                A:2B00 X:2B00 Y:0002 P:envmxdizC
-$80/8937 AD 40 21    LDA $2140  [$80:2140]   A:2B00 X:2B00 Y:0002 P:envMxdizC
-$80/893A 10 FB       BPL $FB    [$8937]      A:2B80 X:2B00 Y:0002 P:eNvMxdizC
-$80/893C 8E 42 21    STX $2142  [$80:2142]   A:2B80 X:2B00 Y:0002 P:eNvMxdizC
-$80/893F A9 80       LDA #$80                A:2B80 X:2B00 Y:0002 P:eNvMxdizC
-$80/8941 8D 40 21    STA $2140  [$80:2140]   A:2B80 X:2B00 Y:0002 P:eNvMxdizC
-$80/8944 AD 40 21    LDA $2140  [$80:2140]   A:2B80 X:2B00 Y:0002 P:eNvMxdizC
-$80/8947 30 FB       BMI $FB    [$8944]      A:2B80 X:2B00 Y:0002 P:eNvMxdizC
-$80/8949 A9 00       LDA #$00                A:2B00 X:2B00 Y:0002 P:envMxdiZC
-$80/894B 8D 40 21    STA $2140  [$80:2140]   A:2B00 X:2B00 Y:0002 P:envMxdiZC
-$80/894E A6 BA       LDX $BA    [$00:00BA]   A:2B00 X:2B00 Y:0002 P:envMxdiZC
-$80/8950 CA          DEX                     A:2B00 X:01A9 Y:0002 P:envMxdizC
-$80/8951 86 BA       STX $BA    [$00:00BA]   A:2B00 X:01A8 Y:0002 P:envMxdizC
-$80/8953 D0 D9       BNE $D9    [$892E]      A:2B00 X:01A8 Y:0002 P:envMxdizC
-$80/8955 AB          PLB                     A:0007 X:0320 Y:1780 P:envMxdizC
-$80/8956 2B          PLD                     A:0007 X:0320 Y:1780 P:eNvMxdizC
-$80/8957 6B          RTL                     A:0007 X:0320 Y:1780 P:envMxdizC
+
+$80/876D C2 20       REP #$20                ;
+$80/876F 0B          PHD                     ; phd()
+$80/8770 A9 00 03    LDA #$0300              ; D = 0x0300
+$80/8773 5B          TCD                     ;
+$80/8774 A5 20       LDA $20    [$00:0320]   ; $00 = $20
+$80/8776 85 00       STA $00    [$00:0300]   ;
+$80/8778 A5 22       LDA $22    [$00:0322]   ; $02 = $22
+$80/877A 85 02       STA $02    [$00:0302]   ;
+$80/877C A5 24       LDA $24    [$00:0324]   ; $04 = $24
+$80/877E 85 04       STA $04    [$00:0304]   ;
+$80/8780 A5 26       LDA $26    [$00:0326]   ; $06 = $26
+$80/8782 85 06       STA $06    [$00:0306]   ;
+$80/8784 A5 28       LDA $28    [$00:0328]   ; $08 = $28
+$80/8786 85 08       STA $08    [$00:0308]   ;
+$80/8788 A5 2A       LDA $2A    [$00:032A]   ; $0A = $2A
+$80/878A 85 0A       STA $0A    [$00:030A]   ;
+$80/878C A5 2C       LDA $2C    [$00:032C]   ; $0C = $2C
+$80/878E 85 0C       STA $0C    [$00:030C]   ;
+$80/8790 A5 2E       LDA $2E    [$00:032E]   ; $0E = $2E
+$80/8792 85 0E       STA $0E    [$00:030E]   ;
+$80/8794 A5 30       LDA $30    [$00:0330]   ; $10 = $30
+$80/8796 85 10       STA $10    [$00:0310]   ;
+$80/8798 A5 32       LDA $32    [$00:0332]   ; $12 = $32
+$80/879A 85 12       STA $12    [$00:0312]   ;
+$80/879C A5 34       LDA $34    [$00:0334]   ; $14 = $34
+$80/879E 85 14       STA $14    [$00:0314]   ;
+$80/87A0 A5 36       LDA $36    [$00:0336]   ; $16 = $36
+$80/87A2 85 16       STA $16    [$00:0316]   ;
+$80/87A4 A5 38       LDA $38    [$00:0338]   ; $18 = $38
+$80/87A6 85 18       STA $18    [$00:0318]   ;
+$80/87A8 A5 3A       LDA $3A    [$00:033A]   ; $1A = $3A
+$80/87AA 85 1A       STA $1A    [$00:031A]   ;
+$80/87AC A5 3C       LDA $3C    [$00:033C]   ; $1C = $3C
+$80/87AE 85 1C       STA $1C    [$00:031C]   ;
+$80/87B0 A5 3E       LDA $3E    [$00:033E]   ; $1E = $3E
+$80/87B2 85 1E       STA $1E    [$00:031E]   ;
+$80/87B4 E2 20       SEP #$20                ; $00009D = 0x00
+$80/87B6 A9 00       LDA #$00                ;
+$80/87B8 8F 9D 00 00 STA $00009D[$00:009D]   ;
+$80/87BC AF A0 00 00 LDA $0000A0[$00:00A0]   ; $00009E = $0000A0
+$80/87C0 8F 9E 00 00 STA $00009E[$00:009E]   ;
+$80/87C4 2B          PLD                     ; pld()
+$80/87C5 6B          RTL                     ;
+
+$80/87E7 C2 30       REP #$30                ;
+$80/87E9 0B          PHD                     ;
+$80/87EA A9 00 03    LDA #$0300              ;
+$80/87ED 5B          TCD                     ;
+$80/87EE A2 00 00    LDX #$0000              ;
+$80/87F1 A9 55 55    LDA #$5555              ;
+$80/87F4 95 00       STA $00,x  [$00:0300]   ;
+$80/87F6 95 20       STA $20,x  [$00:0320]   ;
+$80/87F8 E8          INX                     ;
+$80/87F9 E8          INX                     ;
+$80/87FA E0 20 00    CPX #$0020              ;
+$80/87FD D0 F5       BNE $F5    [$87F4]      ;
+$80/87FF E2 20       SEP #$20                ;
+$80/8801 A9 80       LDA #$80                ;
+$80/8803 8F A0 00 00 STA $0000A0[$00:00A0]   ;
+$80/8807 8F 9E 00 00 STA $00009E[$00:009E]   ;
+$80/880B 9C 9D 00    STZ $009D  [$80:009D]   ;
+$80/880E 2B          PLD                     ;
+$80/880F 6B          RTL                     ;
+
+$80/8810 0B          PHD                     ;
+$80/8811 8B          PHB                     ;
+$80/8812 C2 20       REP #$20                ;
+$80/8814 A9 00 00    LDA #$0000              ;
+$80/8817 5B          TCD                     ;
+$80/8818 E2 30       SEP #$30                ;
+$80/881A A9 80       LDA #$80                ;
+$80/881C 48          PHA                     ;
+$80/881D AB          PLB                     ;
+$80/881E A9 80       LDA #$80                ;
+$80/8820 24 4E       BIT $4E    [$00:004E]   ;
+$80/8822 F0 09       BEQ $09    [$882D]      ;
+$80/8824 14 41       TRB $41    [$00:0041]   ;
+$80/8826 A9 03       LDA #$03                ;
+$80/8828 85 98       STA $98    [$00:0098]   ;
+$80/882A 20 16 83    JSR $8316  [$80:8316]   ;
+$80/882D AB          PLB                     ;
+$80/882E 2B          PLD                     ;
+$80/882F 6B          RTL                     ;
+
+$80/8830 0B          PHD                     ;
+$80/8831 8B          PHB                     ;
+$80/8832 C2 20       REP #$20                ;
+$80/8834 A9 00 00    LDA #$0000              ;
+$80/8837 5B          TCD                     ;
+$80/8838 E2 20       SEP #$20                ;
+$80/883A A9 80       LDA #$80                ;
+$80/883C 48          PHA                     ;
+$80/883D AB          PLB                     ;
+$80/883E A5 9B       LDA $9B    [$00:009B]   ;
+$80/8840 C9 80       CMP #$80                ;
+$80/8842 D0 09       BNE $09    [$884D]      ;
+$80/8844 A5 4E       LDA $4E    [$00:004E]   ;
+$80/8846 29 80       AND #$80                ;
+$80/8848 F0 F4       BEQ $F4    [$883E]      ;
+$80/884A 20 46 85    JSR $8546  [$80:8546]   ;
+$80/884D E2 30       SEP #$30                ;
+$80/884F E6 9C       INC $9C    [$00:009C]   ;
+$80/8851 A5 9B       LDA $9B    [$00:009B]   ;
+$80/8853 AA          TAX                     ;
+$80/8854 18          CLC                     ;
+$80/8855 69 08       ADC #$08                ;
+$80/8857 85 9B       STA $9B    [$00:009B]   ;
+$80/8859 AB          PLB                     ;
+$80/885A 2B          PLD                     ;
+$80/885B 6B          RTL                     ;
+
+$80/885C 0B          PHD                     ;
+$80/885D 8B          PHB                     ;
+$80/885E C2 30       REP #$30                ;
+$80/8860 48          PHA                     ;
+$80/8861 A9 00 00    LDA #$0000              ;
+$80/8864 5B          TCD                     ;
+$80/8865 E2 30       SEP #$30                ;
+$80/8867 A9 80       LDA #$80                ;
+$80/8869 48          PHA                     ;
+$80/886A AB          PLB                     ;
+$80/886B C2 20       REP #$20                ;
+$80/886D 68          PLA                     ;
+$80/886E E2 20       SEP #$20                ;
+$80/8870 95 5E       STA $5E,x  [$00:005E]   ;
+$80/8872 20 64 86    JSR $8664  [$80:8664]   ;
+$80/8875 AB          PLB                     ;
+$80/8876 2B          PLD                     ;
+$80/8877 6B          RTL                     ;
+
+$80/8878 0B          PHD                     ;
+$80/8879 8B          PHB                     ;
+$80/887A C2 20       REP #$20                ;
+$80/887C A9 00 00    LDA #$0000              ;
+$80/887F 5B          TCD                     ;
+$80/8880 E2 20       SEP #$20                ;
+$80/8882 A9 80       LDA #$80                ;
+$80/8884 48          PHA                     ;
+$80/8885 AB          PLB                     ;
+$80/8886 C2 10       REP #$10                ;
+$80/8888 AD 40 21    LDA $2140  [$80:2140]   ;
+$80/888B 10 FB       BPL $FB    [$8888]      ;
+$80/888D A5 B3       LDA $B3    [$00:00B3]   ;
+$80/888F 8D 42 21    STA $2142  [$80:2142]   ;
+$80/8892 C9 08       CMP #$08                ;
+$80/8894 F0 04       BEQ $04    [$889A]      ;
+$80/8896 C9 09       CMP #$09                ;
+$80/8898 D0 07       BNE $07    [$88A1]      ;
+$80/889A A5 B6       LDA $B6    [$00:00B6]   ;
+$80/889C 8D 43 21    STA $2143  [$80:2143]   ;
+$80/889F 80 18       BRA $18    [$88B9]      ;
+$80/88A1 C9 03       CMP #$03                ;
+$80/88A3 D0 07       BNE $07    [$88AC]      ;
+$80/88A5 A5 B4       LDA $B4    [$00:00B4]   ;
+$80/88A7 8D 43 21    STA $2143  [$80:2143]   ;
+$80/88AA 80 0D       BRA $0D    [$88B9]      ;
+$80/88AC C9 04       CMP #$04                ;
+$80/88AE F0 04       BEQ $04    [$88B4]      ;
+$80/88B0 C9 06       CMP #$06                ;
+$80/88B2 D0 05       BNE $05    [$88B9]      ;
+$80/88B4 A5 B5       LDA $B5    [$00:00B5]   ;
+$80/88B6 8D 43 21    STA $2143  [$80:2143]   ;
+$80/88B9 A9 80       LDA #$80                ;
+$80/88BB 8D 40 21    STA $2140  [$80:2140]   ;
+$80/88BE AD 40 21    LDA $2140  [$80:2140]   ;
+$80/88C1 30 FB       BMI $FB    [$88BE]      ;
+$80/88C3 A9 00       LDA #$00                ;
+$80/88C5 8D 40 21    STA $2140  [$80:2140]   ;
+$80/88C8 A5 B3       LDA $B3    [$00:00B3]   ;
+$80/88CA C9 01       CMP #$01                ;
+$80/88CC F0 04       BEQ $04    [$88D2]      ;
+$80/88CE 5C 55 89 80 JMP $808955[$80:8955]   ;
+$80/88D2 AD 40 21    LDA $2140  [$80:2140]   ;
+$80/88D5 10 FB       BPL $FB    [$88D2]      ;
+$80/88D7 C2 20       REP #$20                ;
+$80/88D9 A0 00 00    LDY #$0000              ;
+$80/88DC B7 B7       LDA [$B7],y[$80:BFC9]   ;
+$80/88DE 8D 42 21    STA $2142  [$80:2142]   ;
+$80/88E1 E2 20       SEP #$20                ;
+$80/88E3 A9 80       LDA #$80                ;
+$80/88E5 8D 40 21    STA $2140  [$80:2140]   ;
+$80/88E8 AD 40 21    LDA $2140  [$80:2140]   ;
+$80/88EB 30 FB       BMI $FB    [$88E8]      ;
+$80/88ED A9 00       LDA #$00                ;
+$80/88EF 8D 40 21    STA $2140  [$80:2140]   ;
+$80/88F2 AD 40 21    LDA $2140  [$80:2140]   ;
+$80/88F5 10 FB       BPL $FB    [$88F2]      ;
+$80/88F7 C2 20       REP #$20                ;
+$80/88F9 A0 02 00    LDY #$0002              ;
+$80/88FC B7 B7       LDA [$B7],y[$80:BFCB]   ;
+$80/88FE 8D 42 21    STA $2142  [$80:2142]   ;
+$80/8901 4A          LSR A                   ;
+$80/8902 85 BA       STA $BA    [$00:00BA]   ;
+$80/8904 90 02       BCC $02    [$8908]      ;
+$80/8906 E6 BA       INC $BA    [$00:00BA]   ;
+$80/8908 E2 20       SEP #$20                ;
+$80/890A A9 80       LDA #$80                ;
+$80/890C 8D 40 21    STA $2140  [$80:2140]   ;
+$80/890F AD 40 21    LDA $2140  [$80:2140]   ;
+$80/8912 30 FB       BMI $FB    [$890F]      ;
+$80/8914 A9 00       LDA #$00                ;
+$80/8916 8D 40 21    STA $2140  [$80:2140]   ;
+$80/8919 C2 20       REP #$20                ;
+$80/891B A0 04 00    LDY #$0004              ;
+$80/891E B7 B7       LDA [$B7],y[$80:BFCD]   ;
+$80/8920 85 BC       STA $BC    [$00:00BC]   ;
+$80/8922 E2 20       SEP #$20                ;
+$80/8924 A0 06 00    LDY #$0006              ;
+$80/8927 B7 B7       LDA [$B7],y[$80:BFCF]   ;
+$80/8929 85 BE       STA $BE    [$00:00BE]   ;
+$80/892B A0 00 00    LDY #$0000              ;
+$80/892E C2 20       REP #$20                ;
+$80/8930 B7 BC       LDA [$BC],y[$81:8032]   ;
+$80/8932 C8          INY                     ;
+$80/8933 C8          INY                     ;
+$80/8934 AA          TAX                     ;
+$80/8935 E2 20       SEP #$20                ;
+$80/8937 AD 40 21    LDA $2140  [$80:2140]   ;
+$80/893A 10 FB       BPL $FB    [$8937]      ;
+$80/893C 8E 42 21    STX $2142  [$80:2142]   ;
+$80/893F A9 80       LDA #$80                ;
+$80/8941 8D 40 21    STA $2140  [$80:2140]   ;
+$80/8944 AD 40 21    LDA $2140  [$80:2140]   ;
+$80/8947 30 FB       BMI $FB    [$8944]      ;
+$80/8949 A9 00       LDA #$00                ;
+$80/894B 8D 40 21    STA $2140  [$80:2140]   ;
+$80/894E A6 BA       LDX $BA    [$00:00BA]   ;
+$80/8950 CA          DEX                     ;
+$80/8951 86 BA       STX $BA    [$00:00BA]   ;
+$80/8953 D0 D9       BNE $D9    [$892E]      ;
+$80/8955 AB          PLB                     ;
+$80/8956 2B          PLD                     ;
+$80/8957 6B          RTL                     ;
 
 
 sound_driver:
@@ -1117,7 +1167,7 @@ D7 10 AE 8D 16 D7 10 3F 34 0E 3F A7 0E 6F 6C F2
 0x0800 // aram sound driver start address
 
 
-$80/91C2 78          SEI                     A:0865 X:0000 Y:086A P:envMxdIZC
+$80/91C2 78          SEI                     ;
 $80/91C3 E2 20       SEP #$20                A:0865 X:0000 Y:086A P:envMxdIZC
 $80/91C5 AD 48 00    LDA $0048  [$80:0048]   A:0865 X:0000 Y:086A P:envMxdIZC
 $80/91C8 29 7F       AND #$7F                A:0801 X:0000 Y:086A P:envMxdIzC
@@ -2752,9 +2802,16 @@ $80/D6EC 9C 84 07    STZ $0784  [$80:0784]   A:0000 X:0020 Y:0080 P:envmXdiZC
 $80/D6EF 6B          RTL                     A:0000 X:0020 Y:0080 P:envmXdiZC
 
 
+// non-standard rom header, doesn't follow snes dev manual guidelines
+rom_header:
+$80/FFB0
+0x00 0x00, 0x02 0x00 0x00 0x00, 0x08, 0x20, 0x00 0x00, 0x00 0x01 0x00 0x00 0x00 0x00
+"KOUTETSU-NO KISHI    "
+0x30, 0x02, 0x0A, 0x03, 0x00, 0xE8, 0x00, 0xED27, 0x12D8
 
-"KOUTETSU-NO KISHI    ", 0x30, 0x02, 0x0A, 0x03, 0x00, 0xE8,
 
 vector_table:
-0x8000 0x8009, 0x8012, 0x801B, 0x8024, 0x808F, 0x802D, 0x80AF
-0x8036 0x803F, 0x8048, 0x8051, 0x805A, 0x8063, 0x8075, 0x806C
+$80/FFE0
+0x8000, 0x8009, 0x8012, 0x801B, 0x8024, 0x808F, 0x802D, 0x80AF
+0x8036, 0x803F, 0x8048, 0x8051, 0x805A, 0x8063, 0x8075, 0x806C
+
