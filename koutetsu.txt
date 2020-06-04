@@ -1,4 +1,258 @@
+//============================================================================//
+// rom map                                                                    //
+//============================================================================//
+$008075 VEC reset_vector
+$00806F VEC nmi_vector
+$8080D0 DAT vram_clear_value
+$8080D1 JSR reset
+$8081C8 JSR sound_boot_loader
+$808229 JSR nmi
+$808316 JSR nmi2
+$8084AD JSR oam_dma
+$8084D8 JSR cgram_dma
+$808508 JSR
+$808546 JSR vram_dma
+$8085A4 JSR read_joy
+$8085EE JSR read_mouse
+$80861D JSR mouse_data
+$808664 JSR mouse_change_speed
+$8086AA DAT mouse_bios_string
+$8086DB JSL
+$808731 JSL
+$80876D JSL
+$8087E7 JSL
+$808810 JSL
+$808830 JSL
+$80885C JSL
+$808878 JSL sound_command
+$808958 DAT sound_driver
+$8091C2 JMP
+$809364 JSL
+$80938E JSR
+$8093CF JSL
+$8093D2 JSL
+$8093FF JSL
+$809448 JSR
+$80945A JSR
+$809469 JSR
+$80947E JSL
+$80953D JSR
+$809549 JSR
+$809552 JSR
+$80955F JSR
+$809568 JSR
+$8095A1 JSR
+$8095BD JSL
+$8095C0 JSR
+$8095D0 JSR
+$809653 JSR
+$80966A JSR
+$809742 JSR
+$809759 JSR
+$809766 JSR
+$809777 JSR
+$8097AF JSR
+$8097CA JSR
+$8097F5 JSR
+$809857 JSR
+$809890 JSR
+$80989C JSR
+$8098BB JSR
+$80991F JSR
+$809BDB JSR
+$809BF8 JSR
+$809C0F JSR
+$809C22 JSR
+$809C39 JSR
+$809CF8 JSL
+$809E44 JSL
+$809EFF JSR
+$809F75 JSR
+$809F88 JSR
+$80B041 JSR
+$80B2D4 JSR
+$80B349 JSL
+$80BA5C JSR
+$80BADF JSL
+$80BB0C JSR (this is jumped into from a JSR)
+$80BE9E JSR (this is jumped into from a JSR)
+$80BF81 JSR
+$80C0F9 JSL (trace ended here before RTL encountered)
+$80C3F6 JSL
+$80C419 JSL
+$80C497 JSL
+$80C4AA JSL
+$80D5F2 JSL
+$80FFB0 DAT rom_header
+$80FFE0 DAT vector_table
 
+
+//============================================================================//
+// call graph                                                                 //
+//============================================================================//
+$008075 VEC reset_vector
+    $8080D1 JSR reset
+    $8091C2 JMP
+$00806F VEC nmi_vector
+    $808229 JSR nmi
+$8080D1 JSR reset
+    $8081C8 JSR sound_boot_loader
+$8081C8 JSR sound_boot_loader
+$808229 JSR nmi
+    $808546 JSR vram_dma
+    $8084AD JSR oam_dma
+    $8084D8 JSR cgram_dma
+    $808508 JSR
+    $8085A4 JSR read_joy
+    $8085EE JSR read_mouse
+$808316 JSR nmi2
+    $808546 JSR vram_dma
+    $8084AD JSR oam_dma
+    $8084D8 JSR cgram_dma
+    $808508 JSR
+    $8085A4 JSR read_joy
+    $8085EE JSR read_mouse
+$8084AD JSR oam_dma
+$8084D8 JSR cgram_dma
+$808508 JSR
+$808546 JSR vram_dma
+$8085A4 JSR read_joy
+$8085EE JSR read_mouse
+    $80861D JSR mouse_data
+    $808664 JSR mouse_change_speed
+$80861D JSR mouse_data
+$808664 JSR mouse_change_speed
+$8086DB JSL
+    $808810 JSL
+$808731 JSL
+$80876D JSL
+$8087E7 JSL
+$808810 JSL
+    $808316 JSR
+$808830 JSL
+    $808546 JSR vram_dma
+$80885C JSL
+    $808664 JSR mouse_change_speed
+$808878 JSL sound_command
+$8091C2 JMP
+    $80BA5C JSR
+    $8093D2 JSL
+    $80BE9E JSR (jump into)
+$809364 JSL
+    $80938E JSR
+    $808731 JSL
+    $8086DB JSL
+    $80B2D4 JSR
+    $80876D JSL
+$80938E JSR
+    $8093CF JSL
+    $80945A JSR
+    $809448 JSR
+$8093CF JSL
+    ??? (indirect long jump)
+$8093D2 JSL
+    $809448 JSR
+    $8087E7 JSL
+$8093FF JSL
+    $80945A JSR
+    $809469 JSR
+$809448 JSR
+    $809469 JSR
+$80945A JSR
+$809469 JSR
+$80947E JSL
+    ??? (indexed indirect subroutine. table probably at $80949D)
+$80953D JSR
+$809549 JSR
+$809552 JSR
+$80955F JSR
+$809568 JSR
+    $8093FF JSL
+$8095A1 JSR
+    $8095BD JSL
+$8095BD JSL
+    ??? (indirect long jump)
+$8095C0 JSR
+	$8093FF JSL
+$8095D0 JSR
+	$8093FF JSL
+$809653 JSR
+	$808878 JSL sound_command
+$80966A JSR
+	$80B041 JSR
+$809742 JSR
+$809759 JSR
+$809766 JSR
+$809777 JSR
+$8097AF JSR
+$8097CA JSR
+$8097F5 JSR
+$809857 JSR
+$809890 JSR
+$80989C JSR
+$8098BB JSR
+$80991F JSR
+$809BDB JSR
+	$808878 JSL sound_command
+$809BF8 JSR
+	$808878 JSL sound_command
+$809C0F JSR
+	$808878 JSL sound_command
+$809C22 JSR
+	$808878 JSL sound_command
+$809C39 JSR
+	$808878 JSL sound_command
+$809CF8 JSL
+	$80B349 JSL
+	$808830 JSL
+$809E44 JSL
+	$809F88 JSR
+	$809EFF JSR
+	$809F75 JSR
+$809EFF JSR
+$809F75 JSR
+$809F88 JSR
+$80B041 JSR
+	$80B349 JSL
+	$80BB0C JSR (jump into)
+$80B2D4 JSR
+$80B349 JSL
+$80BA5C JSR
+$80BADF JSL
+$80BB0C JSR
+	$808830 JSL
+$80BE9E JSR
+	$80BF81 JSR
+	$80C0F9 JSL
+$80BF81 JSR
+	$8093D2 JSL
+	$808878 JSL sound_command
+	$80947E JSL
+	$80885C JSL
+$80C0F9 JSL
+	$80D5F2 JSL
+	$80947E JSL
+	$809364 JSL
+	$808810 JSL
+	$80BADF JSL
+$80C3F6 JSL
+$80C419 JSL
+$80C497 JSL
+$80C4AA JSL
+$80D5F2 JSL
+	$8093D2 JSL
+
+
+//============================================================================//
+// ram map                                                                    //
+//============================================================================//
+$7E0100 BYTE 0x0220 oam
+$7E0340 BYTE 0x0200 cgram
+
+
+//============================================================================//
+// rom                                                                        //
+//============================================================================//
 reset_vector:
 $00/8075 18          CLC                     ; E = 0
 $00/8076 FB          XCE                     ;
@@ -37,7 +291,7 @@ $80/80AA FA          PLX                     ; plx()
 $80/80AB 2B          PLD                     ; pld()
 $80/80AC AB          PLB                     ; plb()
 $80/80AD 68          PLA                     ; pla()
-$80/80AE 40          RTI                     ; rti
+$80/80AE 40          RTI                     ; rti()
 
 
 vram_clear_value:
@@ -208,17 +462,17 @@ $00/8228 60          RTS                     ;
 
 
 nmi:
-$80/8229 E2 30       SEP #$30                ; A = RDNMI // reset nmi by v-blank flag
+$80/8229 E2 30       SEP #$30                ; A = RDNMI // reset v-blank flag by reading
 $80/822B AD 10 42    LDA $4210               ;
-$80/822E A9 02       LDA #$02                ; $98 |= 0x02
-$80/8230 04 98       TSB $98                 ;
-$80/8232 F0 01       BEQ +                   ; if
-$80/8234 60          RTS                     ;
+$80/822E A9 02       LDA #$02                ; A = $98
+$80/8230 04 98       TSB $98                 ; $98 |= 0x02
+$80/8232 F0 01       BEQ +                   ; if(A & 0x02) {
+$80/8234 60          RTS                     ;     return
 +:
-$80/8235 A5 98       LDA $98                 ;
-$80/8237 29 01       AND #$01                ;
-$80/8239 F0 03       BEQ +                   ;
-$80/823B 4C 16 83    JMP ++                  ;
+$80/8235 A5 98       LDA $98                 ; }
+$80/8237 29 01       AND #$01                ; if($98 & 0x01) {
+$80/8239 F0 03       BEQ +                   ;     goto nmi2
+$80/823B 4C 16 83    JMP nmi2                ; }
 +:
 $80/823E A5 6E       LDA $6E                 ; MOSAIC = mosaic
 $80/8240 8D 06 21    STA $2106               ;
@@ -306,8 +560,8 @@ $80/830B A5 8A       LDA $8A                 ; M7Y = m7y.hi
 $80/830D 8D 20 21    STA $2120               ;
 $80/8310 20 46 85    JSR $8546               ; $8546()
 $80/8313 64 98       STZ $98                 ; $98 = 0x00
-$80/8315 60          RTS                     ;
-++:
+$80/8315 60          RTS                     ; return
+nmi2:
 $80/8316 20 AD 84    JSR $84AD               ; oam_dma()
 $80/8319 A5 43       LDA $43                 ; OAMADD = oamadd // configure priority rotation
 $80/831B 8D 02 21    STA $2102               ;
@@ -1758,7 +2012,7 @@ $80/985D B1 0B       LDA ($0B),y[$80:C313]   ;
 $80/985F D5 00       CMP $00,x  [$00:1423]   ; A = (A == $00[X])? 0x04 : (*$0B)[0x01]
 $80/9861 D0 45       BNE +                   ;
 $80/9863 A9 04       LDA #$04                ;
-$80/9865 60          RTS                     ; return
+$80/9865 60          RTS                     ;
 
 
 ???:
@@ -1768,7 +2022,7 @@ $80/9894 AA          TAX                     ;
 $80/9895 B5 00       LDA $00,x  [$00:1423]   ; A = (A == $00[X])? 0x03 : (*$0B)[0x01]
 $80/9897 D0 0F       BNE $0F    [$98A8]      ;
 $80/9899 A9 03       LDA #$03                ;
-$80/989B 60          RTS                     ; return
+$80/989B 60          RTS                     ;
 
 
 ???:
@@ -1782,7 +2036,7 @@ $80/98A7 60          RTS                     ;
 +:
 $80/98A8 A0 01       LDY #$01                ;
 $80/98AA B1 0B       LDA ($0B),y[$80:C311]   ;
-$80/98AC 60          RTS                     ; return
+$80/98AC 60          RTS                     ;
 
 
 ???:
@@ -2750,8 +3004,12 @@ $80/BDA2 60          RTS                     ;
 
 
 ???:
-$80/BE9E 20 81 BF    JSR $BF81  [$80:BF81]   ; $Bf81()
+$80/BE9E 20 81 BF    JSR $BF81  [$80:BF81]   ; $BF81()
 $80/BEA1 22 F9 C0 80 JSL $80C0F9[$80:C0F9]   ; $80C0F9()
+$80/BEA5                                     ; ???
+
+
+???:
 $80/BF81 22 D2 93 80 JSL $8093D2[$80:93D2]   ; $8093D2()
 $80/BF85 C2 10       REP #$10                ; for(X = 0x0000; X != 0x0320; ++X) {
 $80/BF87 E2 20       SEP #$20                ;
@@ -2797,7 +3055,7 @@ $80/C10C 9C 84 07    STZ $0784  [$80:0784]   ;
 $80/C10F 9C 82 07    STZ $0782  [$80:0782]   ; $0782 = 0x0000
 $80/C112 A9 6C C2    LDA #$C26C              ; $0B = 0xC26C
 $80/C115 85 0B       STA $0B    [$00:180B]   ;
-$80/C117 22 7E 94 80 JSL $80947E[$80:947E]   ; $80917E()
+$80/C117 22 7E 94 80 JSL $80947E[$80:947E]   ; $80947E()
 $80/C11B 22 64 93 80 JSL $809364[$80:9364]   ; $809364()
 $80/C11F E2 20       SEP #$20                ; $0041 = $0041 & 0xF0 | 0x0F
 $80/C121 AD 41 00    LDA $0041  [$80:0041]   ;
